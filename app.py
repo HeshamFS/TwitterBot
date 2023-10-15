@@ -226,6 +226,7 @@ Format Specifications:
 - Only include relevant links without surrounding them with brackets.
 - Ensure each tweet remains under 220 characters.
 - Present each tweet as a separate paragraph.
+- Use many relevant hashtags, includes: Gaza, Palestine, PalestineGenocide, PalestineLivesMatter, GazzeUnderAttack, FreePalestine, FreeGaza, Gazagenocide, SupportGaza
     Topic Headline:{topic}
     Info: {info}
     """
