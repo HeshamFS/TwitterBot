@@ -301,8 +301,8 @@ def researchAgent( query: Query):
     return ret
 
 # Mention Listener to detect mentions in real-time
-class MentionListener(tweepy.StreamListener):
-    def on_status(self, status):
+class MentionHandler:
+    def on_tweet(self, status):
         # Extract the original tweet or thread text
         mentioned_conversation_tweet_text = status.text
         # Call the function to handle the mention
@@ -335,8 +335,7 @@ def generate_response(topic, is_reply=False):
         return ret
 
 # Starting the streaming listener to continuously check for mentions
-listener = MentionListener()
-twitapi = tweeter()  # Assuming tweeter() returns a Tweepy client
-stream = tweepy.Stream(auth=twitapi.auth, listener=listener)
+handler = MentionHandler()
+stream = tweepy.Stream(twitapi.auth, handler)
 stream.filter(track=['@Palestineinfo17'], is_async=True)  # Use is_async=True to run the stream in the background
 
