@@ -1,9 +1,5 @@
 import os
 from dotenv import load_dotenv
-import tweepy
-from fastapi import FastAPI
-from pydantic import BaseModel, Field
-
 
 from langchain import PromptTemplate, LLMChain
 from langchain.agents import initialize_agent, Tool
@@ -21,11 +17,11 @@ import requests
 import json
 from langchain.schema import SystemMessage
 from twit import tweeter
+from fastapi import FastAPI
 
 load_dotenv()
 brwoserless_api_key = os.getenv("BROWSERLESS_API_KEY")
 serper_api_key = os.getenv("SERP_API_KEY")
-bearer_token = os.environ.get("bearer_token")
 
 # 1. Tool for search
 
@@ -154,25 +150,26 @@ tools = [
 ]
 
 system_message = SystemMessage(
-content= """
-You are an expert researcher with a keen ability to explore, analyze, and present information in a comprehensive manner. Your sources of information are diverse, credible, and well-informed. As you conduct this research, adhere to the following guidelines:
+content="""You are a world class researcher, who can do detailed research on any topic and produce facts based results; 
+            you do not make things up, you will try as hard as possible to gather facts & data to back up the research
+            
+            Please make sure you complete the objective above with the following rules:
+            1/ You should do enough research to gather as much information as possible about the objective
+            2/ If there are url of relevant links & articles, you will scrape it to gather more information
+            3/ After scraping & search, you should think "is there any new things i should search & scraping based on the data I collected to increase research quality?" If answer is yes, continue; But don't do this more than 3 iteratins
+            4/ You should not make things up, you should only write facts & data that you have gathered
+            5/ In the final output, You should include all reference data & links to back up your research; You should include all reference data & links to back up your research
+            6/ Always look at the web first
+            7/ Output as much information as possible, make sure your answer is at least 500 WORDS
+            8/ Be specific about your reasearch, do not just point to a website and say things can be found here, that what you are for
+            
 
-1/ Dedicate your efforts to gather extensive information concerning the Palestinian cause, emphasizing sources that are in support of the Palestinian narrative.
-2/ Focus on factual data and events that underscore the history, struggles, and challenges faced by the Palestinian people in the last century.
-3/ If reference links or articles are mentioned, extract relevant details to enhance the depth and context of the information.
-4/ After collecting the initial information, reflect on whether additional searches could further enrich the content. However, don't go beyond three iterations of this process.
-5/ Avoid conjecture and speculation. Ensure every statement is backed by verifiable facts, data, or credible accounts.
-6/ Cite references and provide links where readers can delve further into the original sources of information.
-7/ Aim for thoroughness in your response, ensuring it encompasses at least 500 words.
-8/ Offer specifics, avoiding vague or general summaries. Each reference should come with specific details rather than broad overviews.
+            Example of what NOT to do return these are just a summary of whats on the website an nothing specific, these tell the user nothing!!
 
-For clarity, avoid responses similar to:
+            1/WIRED - WIRED provides the latest news, articles, photos, slideshows, and videos related to artificial intelligence. Source: WIRED
 
-1/ WIRED - The magazine covers a range of tech topics, including AI. Source: WIRED
-2/ Middle East News - This portal offers updates from the Middle East region. Source: Middle East News
-
-Instead, target detailed extracts and explicit data that offer readers a comprehensive understanding of the Palestinian cause from the pro-Palestinian perspective.
-"""    
+            2/Artificial Intelligence News - This website offers the latest AI news and trends, along with industry research and reports on AI technology. Source: Artificial Intelligence News
+            """
 )
 
 agent_kwargs = {
@@ -195,41 +192,48 @@ agent = initialize_agent(
 
 from langchain.retrievers.multi_query import MultiQueryRetriever
 template = """
-You're a seasoned ghostwriter with expertise in crafting engaging Twitter threads. Using the provided information and your existing knowledge, compose an informative and engrossing Twitter thread on the given topic. Your first tweet should hook the reader to entice them to continue reading.
+    You are a very experienced ghostwriter who excels at writing Twitter threads.
+You will be given a bunch of info below and a topic headline, your job is to use this info and your own knowledge
+to write an engaging Twitter thread.
+The first tweet in the thread should have a hook and engage with the user to read on.
 
-Guidelines for crafting the thread:
-1. **Voice & Tone**:
-   - Be *Informative and Clear*: Ensure clarity and precision. Use authoritative phrases like "Research indicates" or "Experts suggest."
-   - Be *Casual and Engaging*: Use a conversational tone. Engage readers by posing occasional questions.
-2. **Mood**:
-   - *Educational*: Offer valuable insights or teach the reader something new.
-   - *Inviting*: Encourage further exploration or engagement.
-3. **Sentence Structure**:
-   - *Varied Lengths*: Mix short points for emphasis with longer explanatory sentences.
-   - *Descriptive Sentences*: Describe information rather than giving directives. For instance, "Opting for this method can lead to..."
-4. **Transition Style**:
-   - Be *Sequential and Logical*: Provide information in a clear, logical order.
-   - *Visual Emojis*: Use emojis as visual markers or emphasis.
-5. **Rhythm & Pacing**:
-   - Ensure a *Steady Flow* from one point to the next.
-   - Intersperse with *Data and Sources*: Bolster claims with statistics or expert opinions. Offer links for readers seeking a deeper dive.
-6. **Signature Styles**:
-   - *Intriguing Introductions*: Begin tweets or threads with a captivating hook.
-   - *Question-Clarification Format*: Pose a broad question and follow with clarifying details.
-   - *Engaging Summaries*: Recap concisely or invite further discussion.
-7. **Distinctive Indicators**:
-   - *Lead with Facts and Data*: Ground your content in research.
-   - *Engaging Elements*: Use clear, descriptive sentences and occasional questions.
-   - *Visual Emojis as Indicators*: Use emojis to mark transitions or emphasize points.
-   - *Open-ended Conclusions*: Foster a sense of community by ending with questions or prompts.
+Here is your style guide for how to write the thread:
+1. Voice and Tone:
+Informative and Clear: Prioritize clarity and precision in presenting data. Phrases like "Research indicates," "Studies have shown," and "Experts suggest" impart a tone of credibility.
+Casual and Engaging: Maintain a conversational tone using contractions and approachable language. Pose occasional questions to the reader to ensure engagement.
+2. Mood:
+Educational: Create an atmosphere where the reader feels they're gaining valuable insights or learning something new.
+Inviting: Use language that encourages readers to dive deeper, explore more, or engage in a dialogue.
+3. Sentence Structure:
+Varied Sentence Lengths: Use a mix of succinct points for emphasis and longer explanatory sentences for detail.
+Descriptive Sentences: Instead of directive sentences, use descriptive ones to provide information. E.g., "Choosing a topic can lead to..."
+4. Transition Style:
+Sequential and Logical: Guide the reader through information or steps in a clear, logical sequence.
+Visual Emojis: Emojis can still be used as visual cues
+5. Rhythm and Pacing:
+Steady Flow: Ensure a smooth flow of information, transitioning seamlessly from one point to the next.
+Data and Sources: Introduce occasional statistics, study findings, or expert opinions to bolster claims, and offer links or references for deeper dives.
+6. Signature Styles:
+Intriguing Introductions: Start tweets or threads with a captivating fact, question, or statement to grab attention.
+Question and Clarification Format: Begin with a general question or statement and follow up with clarifying information. E.g., "Why is sleep crucial? A study from XYZ University points out..."
 
-Format Specifications:
-- The thread should range between 3 and 10 tweets.
-- Start each tweet with a format like (1/9), but omit the number for the first tweet.
-- Use hashtags sparingly: no more than one or two for the entire thread.
-- Only include relevant links without surrounding them with brackets.
-- Ensure each tweet remains under 220 characters.
-- Present each tweet as a separate paragraph.
+Engaging Summaries: Conclude with a concise recap or an invitation for further discussion to keep the conversation going.
+Distinctive Indicators for an Informational Twitter Style:
+
+Leading with Facts and Data: Ground the content in researched information, making it credible and valuable.
+Engaging Elements: The consistent use of questions and clear, descriptive sentences ensures engagement without leaning heavily on personal anecdotes.
+Visual Emojis as Indicators: Emojis are not just for casual conversations; they can be effectively used to mark transitions or emphasize points even in an informational context.
+Open-ended Conclusions: Ending with questions or prompts for discussion can engage readers and foster a sense of community around the content.
+
+Last instructions:
+The twitter thread should be between the length of 3 and 10 tweets 
+Each tweet should start with (tweetnumber/total length)
+Dont overuse hashtags, only one or two for entire thread.
+The first tweet, do not place a number at the start.
+When numbering the tweetes Only the tweetnumber out of the total tweets. i.e. (1/9) not (tweet 1/9)
+Use links sparingly and only when really needed, but when you do make sure you actually include them AND ONLY PUT THE LINk, dont put brackets around them. 
+Only return the thread, no other text, and make each tweet its own paragraph.
+Make sure each tweet is lower that 220 chars
     Topic Headline:{topic}
     Info: {info}
     """
@@ -301,52 +305,114 @@ def researchAgent( query: Query):
     ret = tweetertweet(thread)
     return ret
 
-# Mention Listener to detect mentions in real-time
-class MentionHandler:
-    def on_tweet(self, status):
-        # Extract the original tweet or thread text
-        mentioned_conversation_tweet_text = status.text
-        # Call the function to handle the mention
-        handle_mention(mentioned_conversation_tweet_text)
+# Additional imports from the provided snippet
+import tweepy
+from datetime import datetime, timedelta
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
 
-    def on_error(self, status_code):
-        if status_code == 420:
-            # Disconnects the stream if rate-limited
-            return False
+# We already have dotenv imported, so we won't import it again.
 
-# Function to handle mentions, retrieve the original tweet, and generate a response
-def handle_mention(tweet_text):
-    search_results = search(tweet_text)
-    # Use GPT-4 to generate a single tweet response based on the search results
-    response = llm_chain.predict(info=search_results, topic=tweet_text)
-    # Post the response
-    twitapi.create_tweet(text=response, in_reply_to_tweet_id=status.id)
+# Using the tweeter function from twit.py to get the Tweepy client
+client = tweeter()
 
-# Modified researchAgent function with switch functionality
-def generate_response(topic, is_reply=False):
-    search_results = search(topic)
-    if is_reply:
-        # Generate a single tweet response
-        response = llm_chain.predict(info=search_results, topic=topic)
-        return response
+class TwitterMentionBot:
+    def __init__(self):
+        self.twitter_api = client
+        self.twitter_me_id = self.get_me_id()
+        self.tweet_response_limit = 35
+
+        # Initialize the language model with temperature of .5 for some creativity
+        self.llm = ChatOpenAI(temperature=.5, model_name='gpt-4')
+
+
+    def get_me_id(self):
+        return self.twitter_api.get_me()[0].id
+
+    def get_mention_conversation_tweet(self, mention):
+        if mention.conversation_id is not None:
+            conversation_tweet = self.twitter_api.get_tweet(mention.conversation_id).data
+            return conversation_tweet
+        return None
+
+    def get_mentions(self):
+        now = datetime.utcnow()
+        start_time = now - timedelta(minutes=20)
+        start_time_str = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+        return self.twitter_api.get_users_mentions(id=self.twitter_me_id,
+                                                   start_time=start_time_str,
+                                                   expansions=['referenced_tweets.id'],
+                                                   tweet_fields=['created_at', 'conversation_id']).data
+
+    
+    
+    def respond_to_mention(self, mention, mentioned_conversation_tweet):
+        # Extract the content of the original thread
+        original_thread_content = mentioned_conversation_tweet.text
+        
+        # Use the researchAgent function to research the topic and generate the response
+        response_data = researchAgent(Query(query=original_thread_content))
+        
+        # Extract the tweet content from the response_data
+        response_text = response_data['tweet']
+        
+        # Post the reply in response to the mention
+        try:
+            self.twitter_api.create_tweet(text=response_text, in_reply_to_tweet_id=mention.id)
+        except Exception as e:
+            print(e)
+            return
+
+        # Step 1: Extract the content of the original thread
+        original_thread_content = mentioned_conversation_tweet.text
+        
+        # Step 2: Use the search function to research the topic mentioned in the original thread
+        research_results = search(original_thread_content)
+        
+        # Step 3: Generate a reply based on the results of the research
+        # We'll use the generate_response function to craft the reply
+        response_text = self.generate_response(research_results)
+        
+        # Step 4: Post the reply in response to the mention
+        try:
+            self.twitter_api.create_tweet(text=response_text, in_reply_to_tweet_id=mention.id)
+        except Exception as e:
+            print(e)
+            return
+
+        response_text = self.generate_response(mentioned_conversation_tweet.text)
+        try:
+            self.twitter_api.create_tweet(text=response_text, in_reply_to_tweet_id=mention.id)
+        except Exception as e:
+            print(e)
+            return
+
+    def respond_to_mentions(self):
+        mentions = self.get_mentions()
+        if not mentions:
+            print("No mentions found")
+            return
+        for mention in mentions[:self.tweet_response_limit]:
+            mentioned_conversation_tweet = self.get_mention_conversation_tweet(mention)
+            if mentioned_conversation_tweet.id != mention.id:
+                self.respond_to_mention(mention, mentioned_conversation_tweet)
+
+# End of the extended content
+
+
+@app.post("/respond")
+def respond_to_query_or_mention(context: str, query: str = None):
+    # If the context is a direct query, generate a series of tweets
+    if context == "direct_query":
+        content = agent({"input": query})
+        actual_content = content['output']
+        thread = llm_chain.predict(info=actual_content, topic=query)
+        return tweetertweet(thread)
+    # If the context is a mention, generate a single tweet in reply
+    elif context == "mention":
+        mention_bot = TwitterMentionBot()
+        mention_bot.respond_to_mentions()
+        return "Replied to mentions"
     else:
-        # Generate a thread (existing logic from app.py)
-        thread = llm_chain.predict(info = search_results, topic = topic)
-        ret = tweetertweet(thread)
-        return ret
-
-class CustomStreamingClient(tweepy.StreamingClient):
-    def on_tweet(self, tweet):
-        # Extract the original tweet or thread text
-        mentioned_conversation_tweet_text = tweet["text"]
-        # Call the function to handle the mention
-        handle_mention(mentioned_conversation_tweet_text)
-
-# Assuming tweeter() returns a Tweepy Client object
-# Initialize the StreamingClient with your Bearer Token
-streaming_client = CustomStreamingClient("bearer_token")
-
-# Add rule to listen for mentions of your Twitter handle and start the stream
-streaming_client.add_rules(tweepy.StreamRule(f"@Palestineinfo17"))
-streaming_client.filter()
+        return "Invalid context"
 
