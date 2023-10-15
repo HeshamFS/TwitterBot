@@ -25,6 +25,7 @@ from twit import tweeter
 load_dotenv()
 brwoserless_api_key = os.getenv("BROWSERLESS_API_KEY")
 serper_api_key = os.getenv("SERP_API_KEY")
+bearer_token = os.environ.get("bearer_token")
 
 # 1. Tool for search
 
@@ -334,9 +335,18 @@ def generate_response(topic, is_reply=False):
         ret = tweetertweet(thread)
         return ret
 
-# Assuming tweeter() returns a Tweepy Client object
+class CustomStreamingClient(tweepy.StreamingClient):
+    def on_tweet(self, tweet):
+        # Extract the original tweet or thread text
+        mentioned_conversation_tweet_text = tweet["text"]
+        # Call the function to handle the mention
+        handle_mention(mentioned_conversation_tweet_text)
 
-api = tweeter()
-handler = MentionHandler()
-stream = tweepy.Stream(api.auth, handler)
-stream.filter(track=['@Palestineinfo17'])
+# Assuming tweeter() returns a Tweepy Client object
+# Initialize the StreamingClient with your Bearer Token
+streaming_client = CustomStreamingClient("bearer_token")
+
+# Add rule to listen for mentions of your Twitter handle and start the stream
+streaming_client.add_rules(tweepy.StreamRule(f"@Palestineinfo17"))
+streaming_client.filter()
+
