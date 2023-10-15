@@ -334,8 +334,10 @@ def generate_response(topic, is_reply=False):
         ret = tweetertweet(thread)
         return ret
 
-# Starting the streaming listener to continuously check for mentions
+# Assuming tweeter() returns a Tweepy Client object
+client = tweeter()
 handler = MentionHandler()
-stream = tweepy.Stream(twitapi.auth, handler)
-stream.filter(track=['@Palestineinfo17'], is_async=True)  # Use is_async=True to run the stream in the background
+stream = client.stream.statuses.filter(track=['@Palestineinfo17'])
+for status in stream:
+    handler.on_tweet(status)
 
