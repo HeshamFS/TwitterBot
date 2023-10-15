@@ -335,9 +335,8 @@ def generate_response(topic, is_reply=False):
         return ret
 
 # Assuming tweeter() returns a Tweepy Client object
-client = tweeter()
-handler = MentionHandler()
-stream = client.stream.statuses.filter(track=['@Palestineinfo17'])
-for status in stream:
-    handler.on_tweet(status)
 
+api = tweeter()
+handler = MentionHandler()
+stream = tweepy.Stream(api.auth, handler)
+stream.filter(track=['@Palestineinfo17'])
