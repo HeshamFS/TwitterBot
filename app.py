@@ -289,7 +289,11 @@ class TwitterMentionBot:
         return self.twitter_api.get_me()[0].id
 
     def get_mentions(self):
-        return self.twitter_api.mentions_timeline(count=20)  # Retrieve the last 20 mentions
+        mentions = self.twitter_api.mentions_timeline(count=20)  # Retrieve the last 20 mentions
+        for mention in mentions:
+            print(f"Received mention from {mention.user.screen_name} with text: {mention.text}")
+        return mentions
+
 
     def respond_to_mention(self, mention):
         # Extract the content of the mention
@@ -300,12 +304,15 @@ class TwitterMentionBot:
         response_text = response_data['tweet']
         # Post the reply in response to the mention
         self.twitter_api.update_status(status=response_text, in_reply_to_status_id=mention.id)
-
+        print(f"Replied to mention from {mention.user.screen_name} with text: {response_text}")
+    
     def respond_to_mentions(self):
-        mentions = self.get_mentions()
-        for mention in mentions[:self.tweet_response_limit]:
-            self.respond_to_mention(mention)
-
+        try:
+            mentions = self.get_mentions()
+            for mention in mentions[:self.tweet_response_limit]:
+                self.respond_to_mention(mention)
+        except Exception as e:
+            print(f"Error encountered: {e}")
 
 # 5. Set this as an API endpoint via FastAPI
 app = FastAPI()
@@ -334,6 +341,8 @@ from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, H
 
 # Using the tweeter function from twit.py to get the Tweepy client
 client = tweeter()
+print(f"Authenticated as: {client.get_me()[0].screen_name}")
+
 
 # class TwitterMentionBot:
 #     def __init__(self):
