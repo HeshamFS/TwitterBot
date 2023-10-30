@@ -341,7 +341,7 @@ from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, H
 
 # Using the tweeter function from twit.py to get the Tweepy client
 client = tweeter()
-print(f"Authenticated as: {client.get_me()[0].screen_name}")
+print(f"Authenticated as: {client.get_me().screen_name}")
 
 
 # class TwitterMentionBot:
