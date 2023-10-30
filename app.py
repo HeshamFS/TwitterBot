@@ -19,7 +19,6 @@ from langchain.schema import SystemMessage
 from twit import tweeter
 from fastapi import FastAPI
 
-
 load_dotenv()
 brwoserless_api_key = os.getenv("BROWSERLESS_API_KEY")
 serper_api_key = os.getenv("SERP_API_KEY")
@@ -279,32 +278,7 @@ def tweetertweet(thread):
         return f"Error posting tweets: {e}"
 
 
-class TwitterMentionBot:
-    def __init__(self):
-        self.twitter_api = tweeter()
-        self.twitter_me_id = self.get_me_id()
-        self.tweet_response_limit = 5  # Limit the number of mentions we respond to at once
 
-    def get_me_id(self):
-        return self.twitter_api.get_me()[0].id
-
-    def get_mentions(self):
-        return self.twitter_api.mentions_timeline(count=20)  # Retrieve the last 20 mentions
-
-    def respond_to_mention(self, mention):
-        # Extract the content of the mention
-        mention_content = mention.text
-        # Use the researchAgent function to research the topic and generate the response
-        response_data = researchAgent(Query(query=mention_content))
-        # Extract the tweet content from the response_data
-        response_text = response_data['tweet']
-        # Post the reply in response to the mention
-        self.twitter_api.update_status(status=response_text, in_reply_to_status_id=mention.id)
-
-    def respond_to_mentions(self):
-        mentions = self.get_mentions()
-        for mention in mentions[:self.tweet_response_limit]:
-            self.respond_to_mention(mention)
 
 
 # 5. Set this as an API endpoint via FastAPI
@@ -335,86 +309,86 @@ from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, H
 # Using the tweeter function from twit.py to get the Tweepy client
 client = tweeter()
 
-# class TwitterMentionBot:
-#     def __init__(self):
-#         self.twitter_api = client
-#         self.twitter_me_id = self.get_me_id()
-#         self.tweet_response_limit = 35
+class TwitterMentionBot:
+    def __init__(self):
+        self.twitter_api = client
+        self.twitter_me_id = self.get_me_id()
+        self.tweet_response_limit = 35
 
-#         # Initialize the language model with temperature of .5 for some creativity
-#         self.llm = ChatOpenAI(temperature=.5, model_name='gpt-4')
+        # Initialize the language model with temperature of .5 for some creativity
+        self.llm = ChatOpenAI(temperature=.5, model_name='gpt-4')
 
 
-#     def get_me_id(self):
-#         return self.twitter_api.get_me()[0].id
+    def get_me_id(self):
+        return self.twitter_api.get_me()[0].id
 
-#     def get_mention_conversation_tweet(self, mention):
-#         if mention.conversation_id is not None:
-#             conversation_tweet = self.twitter_api.get_tweet(mention.conversation_id).data
-#             return conversation_tweet
-#         return None
+    def get_mention_conversation_tweet(self, mention):
+        if mention.conversation_id is not None:
+            conversation_tweet = self.twitter_api.get_tweet(mention.conversation_id).data
+            return conversation_tweet
+        return None
 
-#     def get_mentions(self):
-#         now = datetime.utcnow()
-#         start_time = now - timedelta(minutes=20)
-#         start_time_str = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
-#         return self.twitter_api.get_users_mentions(id=self.twitter_me_id,
-#                                                    start_time=start_time_str,
-#                                                    expansions=['referenced_tweets.id'],
-#                                                    tweet_fields=['created_at', 'conversation_id']).data
+    def get_mentions(self):
+        now = datetime.utcnow()
+        start_time = now - timedelta(minutes=20)
+        start_time_str = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+        return self.twitter_api.get_users_mentions(id=self.twitter_me_id,
+                                                   start_time=start_time_str,
+                                                   expansions=['referenced_tweets.id'],
+                                                   tweet_fields=['created_at', 'conversation_id']).data
 
     
     
-#     def respond_to_mention(self, mention, mentioned_conversation_tweet):
-#         # Extract the content of the original thread
-#         original_thread_content = mentioned_conversation_tweet.text
+    def respond_to_mention(self, mention, mentioned_conversation_tweet):
+        # Extract the content of the original thread
+        original_thread_content = mentioned_conversation_tweet.text
         
-#         # Use the researchAgent function to research the topic and generate the response
-#         response_data = researchAgent(Query(query=original_thread_content))
+        # Use the researchAgent function to research the topic and generate the response
+        response_data = researchAgent(Query(query=original_thread_content))
         
-#         # Extract the tweet content from the response_data
-#         response_text = response_data['tweet']
+        # Extract the tweet content from the response_data
+        response_text = response_data['tweet']
         
-#         # Post the reply in response to the mention
-#         try:
-#             self.twitter_api.create_tweet(text=response_text, in_reply_to_tweet_id=mention.id)
-#         except Exception as e:
-#             print(e)
-#             return
+        # Post the reply in response to the mention
+        try:
+            self.twitter_api.create_tweet(text=response_text, in_reply_to_tweet_id=mention.id)
+        except Exception as e:
+            print(e)
+            return
 
-#         # Step 1: Extract the content of the original thread
-#         original_thread_content = mentioned_conversation_tweet.text
+        # Step 1: Extract the content of the original thread
+        original_thread_content = mentioned_conversation_tweet.text
         
-#         # Step 2: Use the search function to research the topic mentioned in the original thread
-#         research_results = search(original_thread_content)
+        # Step 2: Use the search function to research the topic mentioned in the original thread
+        research_results = search(original_thread_content)
         
-#         # Step 3: Generate a reply based on the results of the research
-#         # We'll use the generate_response function to craft the reply
-#         response_text = self.generate_response(research_results)
+        # Step 3: Generate a reply based on the results of the research
+        # We'll use the generate_response function to craft the reply
+        response_text = self.generate_response(research_results)
         
-#         # Step 4: Post the reply in response to the mention
-#         try:
-#             self.twitter_api.create_tweet(text=response_text, in_reply_to_tweet_id=mention.id)
-#         except Exception as e:
-#             print(e)
-#             return
+        # Step 4: Post the reply in response to the mention
+        try:
+            self.twitter_api.create_tweet(text=response_text, in_reply_to_tweet_id=mention.id)
+        except Exception as e:
+            print(e)
+            return
 
-#         response_text = self.generate_response(mentioned_conversation_tweet.text)
-#         try:
-#             self.twitter_api.create_tweet(text=response_text, in_reply_to_tweet_id=mention.id)
-#         except Exception as e:
-#             print(e)
-#             return
+        response_text = self.generate_response(mentioned_conversation_tweet.text)
+        try:
+            self.twitter_api.create_tweet(text=response_text, in_reply_to_tweet_id=mention.id)
+        except Exception as e:
+            print(e)
+            return
 
-#     def respond_to_mentions(self):
-#         mentions = self.get_mentions()
-#         if not mentions:
-#             print("No mentions found")
-#             return
-#         for mention in mentions[:self.tweet_response_limit]:
-#             mentioned_conversation_tweet = self.get_mention_conversation_tweet(mention)
-#             if mentioned_conversation_tweet.id != mention.id:
-#                 self.respond_to_mention(mention, mentioned_conversation_tweet)
+    def respond_to_mentions(self):
+        mentions = self.get_mentions()
+        if not mentions:
+            print("No mentions found")
+            return
+        for mention in mentions[:self.tweet_response_limit]:
+            mentioned_conversation_tweet = self.get_mention_conversation_tweet(mention)
+            if mentioned_conversation_tweet.id != mention.id:
+                self.respond_to_mention(mention, mentioned_conversation_tweet)
 
 # End of the extended content
 
@@ -429,11 +403,8 @@ def respond_to_query_or_mention(context: str, query: str = None):
         return tweetertweet(thread)
     # If the context is a mention, generate a single tweet in reply
     elif context == "mention":
-        # mention_bot = TwitterMentionBot()
-        # mention_bot.respond_to_mentions()
         mention_bot = TwitterMentionBot()
         mention_bot.respond_to_mentions()
-
         return "Replied to mentions"
     else:
         return "Invalid context"
